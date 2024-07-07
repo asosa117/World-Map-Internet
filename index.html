@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CS 4804 Final Project</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="https://d3js.org/d3.v6.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="title">World Map of Internet Usage</div>
+      <div class="authors">By: Andrew Sosa</div>
+    </header>
+
+    <svg id="my_dataviz" width="1000" height="600"></svg>
+
+    <script>
+      const svg = d3.select("svg"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
+
+      const path = d3.geoPath();
+      const projection = d3.geoMercator()
+        .scale(125)
+        .center([0,30])
+        .translate([width / 1.5, height / 1.7]);
+
+      const data = new Map();
+      const colorScale = d3.scaleThreshold()
+        .domain([100000, 1000000, 10000000, 30000000, 100000000, 500000000])
+        .range(d3.schemeBlues[7]);
+
+      const allowedYears = [1990, 2000, 2010, 2015, 2016, 2017, 2019, 2020];
+
+      Promise.all([
+        d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
+        d3.csv("https://raw.githubusercontent.com/asosa117/final/main/InternetUsagePop.csv", function(d) {
+            data.set(d.Code, +d.Y2010, d.Name)
+        })
+      ]).then(function(loadData){
+          let topo = loadData[0];
+
+          function update(selectedYear) {
+              d3.csv("https://raw.githubusercontent.com/asosa117/final/main/InternetUsagePop.csv", function(d) {
+                  data.set(d.Code, +d["Y" + selectedYear], d.Name);
+              }).then(function() {
+                  colorScale.domain([100000, 1000000, 10000000, 30000000, 100000000, 500000000]);
+                  svg.selectAll("path")
+                      .attr("fill", function(d) {
+                          d.total = data.get(d.id) || 0;
+                          return colorScale(d.total);
+                      });
+              });
+
+              // Update current year display
+              document.getElementById("currentYear").textContent = selectedYear;
+          }
+
+        
+        const tooltip = d3
+    .select("body")
+    .append("div")
+    .attr("class", "tooltip")
+    .style("position", "absolute")
+    .style("visibility", "hidden");
+
+        
+        
+          // Draw the map
+          svg.append("g")
+              .selectAll("path")
+              .data(topo.features)
+              .enter()
+              .append("path")
+              .attr("d", d3.geoPath()
+                  .projection(projection)
+              )
+              .attr("fill", function (d) {
+                  d.total = data.get(d.id) || 0;
+                  return colorScale(d.total);
+              })
+              .style("stroke", "transparent")
+              .attr("class", function(d){ return "Country" } )
+              .style("opacity", .8)
+              .on("mouseover", function(d) {
+            console.log(d)
+            console.log(d.srcElement.__data__.id)
+                  d3.selectAll(".Country")
+                      .transition()
+                      .duration(200)
+                      .style("opacity", .5);
+                  d3.select(this)
+                      .transition()
+                      .duration(200)
+                      .style("opacity", 1)
+                      .style("stroke", "black");
+                  tooltip
+                      .style("visibility", "visible")
+                      .html("Country Name: "+  d.srcElement.__data__.properties.name +
+                            "<br>Population Using Internet: " + d.srcElement.__data__.total +
+                            "<br>Country Code: " + d.srcElement.__data__.id)
+              })
+              .on("mouseleave", function(d) {
+                  d3.selectAll(".Country")
+                      .transition()
+                      .duration(200)
+                      .style("opacity", .8);
+                  d3.select(this)
+                      .transition()
+                      .duration(200)
+                      .style("stroke", "transparent");
+                  tooltip.style("visibility", "hidden");
+              });
+
+          // Event listener for slider input
+          const slider = document.getElementById("yearSlider");
+          slider.addEventListener("mousedown", function(event) {
+              const currentValue = +slider.value;
+              const allowedValue = allowedYears.find(year => year === currentValue);
+              if (!allowedValue) {
+                  event.preventDefault();
+                  const closestValue = allowedYears.reduce((a, b) => Math.abs(b - currentValue) < Math.abs(a - currentValue) ? b : a);
+                  slider.value = closestValue;
+                  update(closestValue);
+              }
+          });
+
+          slider.addEventListener("input", function() {
+              update(+this.value); // Call update function with the selected year
+          });
+      });
+    </script>
+    <iframe width="420" height="315"
+      src="https://www.youtube.com/embed/P-2qEMk_dC0">
+    </iframe>
+    <button class="pBook" onclick="redirectToLink()">Process Book</button>
+    <input type="range" min="1990" max="2020" value="2010" step="10" class="slider" id="yearSlider">
+    <span id="currentYear">2010</span>
+  
+<script>
+    function redirectToLink() {
+        window.location.href = 'https://docs.google.com/document/d/16wBy4-QNYZ1jW8OxtX91ZWgSgQrPZSZ_4UKMa0fsUBo/edit?usp=sharing';
+    }
+</script>
+  </body>
+  
+
+</html>
