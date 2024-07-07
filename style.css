@@ -1,0 +1,36 @@
+body {
+  background-color: white;
+  margin: 0%;
+}
+
+header {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  background-color: steelblue;
+  height: 70px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.title {
+  font-size: 36px;
+  padding-right: 15px;
+  color: white;
+  margin-left: 20px;
+}
+
+.authors {
+  padding-top: 30px;
+  font-size: 16px;
+  color: white;
+  font-style: italic;
+}
+
+.pBook{
+  border:None;
+  padding: 15px 32px;
+  background-color:steelblue;
+  font-weight:bold;
+  font-size:16px
+}
